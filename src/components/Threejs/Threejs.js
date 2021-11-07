@@ -88,7 +88,6 @@ export function init() {
     const pos = getContainerRelativePosition(event);
     pickPosition.x = (pos.x / container.offsetWidth) * 2 - 1;
     pickPosition.y = (pos.y / container.offsetHeight) * -2 + 1; // note we flip Y
-    console.log(pickPosition)
   }
 
   window.addEventListener('mousemove', setPickPosition);
