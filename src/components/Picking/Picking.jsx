@@ -13,7 +13,7 @@ export const Picking = () => {
     let phi = 0,
       theta = 0;
     let touchX, touchY;
-    let sphere;
+    let pointObjects = [];
     let mesh;
 
     init();
@@ -28,7 +28,7 @@ export const Picking = () => {
       );
       scene = new THREE.Scene();
 
-      const light = new THREE.AmbientLight(0xffffff); // soft white light
+      const light = new THREE.AmbientLight(0xeeeeee, 1); // soft white light
       scene.add(light);
 
       const geometry = new THREE.SphereGeometry(500, 60, 40);
@@ -43,22 +43,37 @@ export const Picking = () => {
       mesh = new THREE.Mesh(geometry, material);
       scene.add(mesh);
 
+      // add circle
       const geometry_pink = new THREE.SphereGeometry(0.02, 32, 32);
       const material_pink = new THREE.MeshBasicMaterial({ color: 11011101 });
-      sphere = new THREE.Mesh(geometry_pink, material_pink);
-      sphere.position.x = 0.0;
-      sphere.position.y = 0.0;
-      sphere.position.z = 1.0;
+      const pointSphere = new THREE.Mesh(geometry_pink, material_pink);
+      pointSphere.position.x = 0.0;
+      pointSphere.position.y = 0.0;
+      pointSphere.position.z = 1.0;
 
-      scene.add(sphere);
+      scene.add(pointSphere);
+      pointObjects.push(pointSphere);
+
+      // add ring to the circle
+      const ring_geometry = new THREE.RingGeometry(0.03, 0.05, 30);
+      const ring_material = new THREE.MeshBasicMaterial({
+        color: 11011101,
+        side: THREE.DoubleSide,
+      });
+      const ring = new THREE.Mesh(ring_geometry, ring_material);
+      ring.position.x = 0.0;
+      ring.position.y = 0.0;
+      ring.position.z = 1.0;
+
+      scene.add(ring);
+      pointObjects.push(ring);
 
       renderer = new THREE.WebGLRenderer();
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
-      //
-
       document.addEventListener('mousedown', onDocumentMouseDown, false);
+      document.addEventListener('mousemove', onDocumentMouseOver);
       document.addEventListener('touchstart', onDocumentTouchStart, false);
       document.addEventListener('touchmove', onDocumentTouchMove, false);
       window.addEventListener('resize', onWindowResize, false);
@@ -70,14 +85,22 @@ export const Picking = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    function onDocumentMouseOver(event) {
+      const intersect = ray_tracing(event, pointObjects);
+      if (intersect.length === 0) {
+        document.body.style.cursor = 'default'
+      } else {
+        document.body.style.cursor = 'pointer'
+      }
+    }
+
     function onDocumentMouseDown(event) {
       event.preventDefault();
 
-      const intersect = ray_tracing(event, [sphere]);
+      const intersect = ray_tracing(event, pointObjects);
       if (intersect.length === 0) {
         document.addEventListener('mousemove', onDocumentMouseMove, false);
       } else {
-        document.addEventListener('mousemove', MouseMoveObject, false);
         document.addEventListener('click', changeTexture, false);
       }
 
@@ -85,11 +108,20 @@ export const Picking = () => {
     }
 
     function changeTexture() {
-      console.log('entered');
-      mesh.material.map = new THREE.TextureLoader().load(
-        'https://aws1.discourse-cdn.com/standard17/uploads/threejs/original/2X/8/8f704e6f7487d15ce979aeca4f4dfea43349ab4b.jpeg'
-      );
-      mesh.material.needsUpdate = true;
+      // mesh.material.map = new THREE.TextureLoader().load(
+      //   'https://aws1.discourse-cdn.com/standard17/uploads/threejs/original/2X/8/8f704e6f7487d15ce979aeca4f4dfea43349ab4b.jpeg'
+      // );
+      // mesh.material.needsUpdate = true;
+      const light = new THREE.AmbientLight(0xeeeeee); // soft white light
+      scene.add(light);
+
+      // Trigger scene change
+      setTimeout(function() {
+          mesh.material.map = new THREE.TextureLoader().load(
+            'https://aws1.discourse-cdn.com/standard17/uploads/threejs/original/2X/8/8f704e6f7487d15ce979aeca4f4dfea43349ab4b.jpeg'
+          );
+          mesh.material.needsUpdate = true;
+      }, 1000);
     }
 
     function ray_tracing(e, objects) {
@@ -112,26 +144,6 @@ export const Picking = () => {
       return raycaster.intersectObjects(objects);
     }
 
-    function MouseMoveObject(event) {
-      const intersect = ray_tracing(event, scene.children);
-      const point = intersect[0].point;
-      point.setLength(1.0);
-
-      sphere.position.x = point.x;
-      sphere.position.y = point.y;
-      sphere.position.z = point.z;
-
-      const pos =
-        'Position: [' +
-        String(point.x.toFixed(2)) +
-        ',' +
-        String(point.y.toFixed(2)) +
-        ',' +
-        String(point.z.toFixed(2)) +
-        ']';
-      console.log(pos);
-    }
-
     function onDocumentMouseMove(event) {
       const movementX =
         event.movementX || event.mozMovementX || event.webkitMovementX || 0;
@@ -143,7 +155,6 @@ export const Picking = () => {
     }
 
     function onDocumentMouseUp(event) {
-      document.removeEventListener('mousemove', MouseMoveObject);
       document.removeEventListener('mousemove', onDocumentMouseMove);
       document.removeEventListener('mouseup', onDocumentMouseUp);
     }

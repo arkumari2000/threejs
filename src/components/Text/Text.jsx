@@ -2,19 +2,16 @@ import React, { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import needResize from '../../utils/needResize';
 
-import { useAudio } from './useAudio';
-
-import sound from './assets/om.mp3';
-
 import './styles.css';
 
-export const Translation = () => {
-  const [toggle] = useAudio(sound);
-
+export const Text = () => {
   useLayoutEffect(() => {
-    const canvas = document.querySelector('#translate');
+    const canvas = document.querySelector('#text');
     const renderer = new THREE.WebGLRenderer({ canvas });
     const scene = new THREE.Scene();
+    const text = new THREE.TextGeometry( 'THREE.JS' );
+
+    scene.add(text)
 
     const camera = new THREE.PerspectiveCamera(
       40,
@@ -24,13 +21,13 @@ export const Translation = () => {
     );
     camera.position.z = 2;
 
-    const geometry = new THREE.SphereGeometry(0.01, 0.01, 0.01);
+    const geometry = new THREE.SphereGeometry(0.001, 0.001, 0.001);
 
     const cubes = []; // just an array we can use to rotate the cubes
 
     const material = new THREE.MeshBasicMaterial();
 
-    for (let i = 0; i < 1500; i++) {
+    for (let i = 0; i < 60000; i++) {
       const cube = new THREE.Mesh(geometry, material);
       cube.position.x = (Math.random() - 0.5) * 10;
       cube.position.y = (Math.random() - 0.5) * 10;
@@ -54,7 +51,7 @@ export const Translation = () => {
       }
 
       cubes.forEach((cube, ndx) => {
-        const speed = 0.1 + ndx * 0.001;
+        const speed = 0.1 + ndx * 0.01;
         const rot = time * speed;
         cube.rotation.x = rot;
         cube.rotation.y = rot;
@@ -70,10 +67,7 @@ export const Translation = () => {
 
   return (
     <div>
-      <canvas id='translate'></canvas>
-      <button onClick={toggle} className='enter-button'>
-        Ask your question here!
-      </button>
+      <canvas id='text'></canvas>
     </div>
   );
 };
